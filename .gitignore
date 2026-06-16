@@ -1,0 +1,39 @@
+# ─── Java / Maven ────────────────────────────────────────────────────────────
+backend/target/
+backend/.mvn/wrapper/maven-wrapper.jar
+*.class
+*.jar
+*.war
+*.ear
+*.nar
+hs_err_pid*
+replay_pid*
+
+# ─── Spring Boot ─────────────────────────────────────────────────────────────
+backend/HELP.md
+
+# ─── Node / npm ──────────────────────────────────────────────────────────────
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+
+# ─── Vite / test ─────────────────────────────────────────────────────────────
+frontend/coverage/
+
+# ─── Makefile runtime files ───────────────────────────────────────────────────
+.back.pid
+.back.log
+.front.pid
+.front.log
+
+# ─── OS / editors ────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+.project
+.classpath
+.settings/

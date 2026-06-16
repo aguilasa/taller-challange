@@ -1,0 +1,29 @@
+### Create a charge
+POST http://localhost:8080/charges
+Content-Type: application/json
+
+{
+  "idempotencyKey": "key-001",
+  "amount": 99.99,
+  "currency": "USD",
+  "customerEmail": "customer@example.com",
+  "cardToken": "tok_visa",
+  "description": "Test charge"
+}
+
+### List latest charges
+GET http://localhost:8080/charges
+
+### Get charge by ID
+GET http://localhost:8080/charges/{{chargeId}}
+
+### Search customers by email
+GET http://localhost:8080/customers/search?email=customer@example.com
+
+### Render support message
+POST http://localhost:8080/support/render-message
+Content-Type: application/json
+
+{
+  "customerName": "John Doe"
+}

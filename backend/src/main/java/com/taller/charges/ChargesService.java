@@ -2,10 +2,11 @@ package com.taller.charges;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+//import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 
 @Service
@@ -19,21 +20,24 @@ public class ChargesService {
     @Autowired private PaymentProcessor processor;
     @Autowired private AuditLog audit;
 
+    private final ConcurrentHashMap<String, Object> keyLocks = new ConcurrentHashMap<>();
+
     public Charge createCharge(ChargeRequest req) {
-        Charge existing = store.findByKey(req.idempotencyKey());
-        if (existing != null) {
-            return existing;
+        Object lock = keyLocks.computeIfAbsent(req.idempotencyKey(), k -> new Object());
+        synchronized (lock) {
+            Charge existing = store.findByKey(req.idempotencyKey());
+            if (existing != null) {
+                return existing;
+            }
+
+            Charge charge = processor.charge(req, STRIPE_API_KEY);
+
+            Charge blocked = store.saveIfAbsent(req.idempotencyKey(), charge);
+            if (blocked != null) return blocked;
+
+            audit.logCharge(charge, req.customerEmail(), req.cardToken());
+            return charge;
         }
-
-        Charge charge = processor.charge(req, STRIPE_API_KEY);
-        persist(req.idempotencyKey(), charge);
-        audit.logCharge(charge, req.customerEmail(), req.cardToken());
-        return charge;
-    }
-
-    @Transactional
-    public void persist(String key, Charge charge) {
-        store.save(key, charge);
     }
 }
 

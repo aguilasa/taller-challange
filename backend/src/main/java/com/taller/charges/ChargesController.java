@@ -11,8 +11,13 @@ import java.util.Map;
 @CrossOrigin(origins = "*")
 public class ChargesController {
 
-    @Autowired private ChargesService service;
-    @Autowired private ChargeStore store;
+    private final ChargesService service;
+    private final ChargeStore store;
+
+    public ChargesController(ChargesService service, ChargeStore store) {
+        this.service = service;
+        this.store = store;
+    }
 
     @PostMapping("/charges")
     public ResponseEntity<Charge> createCharge(@RequestBody ChargeRequest req) {

@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { createRoot } from 'react-dom/client';
 import { createCharge, renderSupportMessage, searchByEmail } from './api';
 
 function newIdempotencyKey() {
@@ -14,7 +13,9 @@ export function App() {
     cardToken: 'tok_visa',
     description: 'Order from checkout'
   });
+  const [idempotencyKey, setIdempotencyKey] = useState(newIdempotencyKey);
   const [lastCharge, setLastCharge] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
   const [searchEmail, setSearchEmail] = useState('happy@example.com');
   const [results, setResults] = useState([]);
   const [supportHtml, setSupportHtml] = useState('');
@@ -27,18 +28,25 @@ export function App() {
   async function submitCharge(e) {
     e.preventDefault();
     setError('');
+    setIsLoading(true);
+    try {
+      console.log('submitting charge with card token', form.cardToken);
 
-    console.log('submitting charge with card token', form.cardToken);
+      const charge = await createCharge({
+        ...form,
+        amount: Number(form.amount),
+        idempotencyKey
+      });
 
-    const charge = await createCharge({
-      ...form,
-      amount: Number(form.amount),
-      idempotencyKey: newIdempotencyKey()
-    });
-
-    setLastCharge(charge);
-    const msg = await renderSupportMessage(form.customerEmail);
-    setSupportHtml(msg.html);
+      setLastCharge(charge);
+      setIdempotencyKey(newIdempotencyKey());
+      const msg = await renderSupportMessage(form.customerEmail);
+      setSupportHtml(msg.html);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   async function runSearch(e) {
@@ -55,7 +63,9 @@ export function App() {
         <label>Email <input value={form.customerEmail} onChange={e => setForm({ ...form, customerEmail: e.target.value })} /></label><br />
         <label>Card token <input value={form.cardToken} onChange={e => setForm({ ...form, cardToken: e.target.value })} /></label><br />
         <label>Description <input value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} /></label><br />
-        <button type="submit">Create charge</button>
+        <button type="submit" disabled={isLoading}>
+          {isLoading ? 'Processing...' : 'Create charge'}
+        </button>
       </form>
 
       {error && <p role="alert">{error}</p>}
@@ -76,4 +86,3 @@ export function App() {
   );
 }
 
-createRoot(document.getElementById('root')).render(<App />);
